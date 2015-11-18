@@ -74,6 +74,7 @@ namespace OxyPlot.Series
             this.MarkerStroke = OxyColors.Automatic;
             this.MarkerResolution = 0;
             this.MarkerSize = 3;
+			this.MarkerSizes = new []{ this.MarkerSize };
             this.MarkerStrokeThickness = 1;
             this.MarkerType = MarkerType.None;
 
@@ -174,6 +175,11 @@ namespace OxyPlot.Series
         /// </summary>
         /// <value>The size of the marker.</value>
         public double MarkerSize { get; set; }
+		/// <summary>
+		/// Gets or sets the marker sizes. The default contains one element <c>MarkerSize</c>. Use this for hightlight markers
+		/// </summary>
+		/// <value>The marker sizes.</value>
+		public double[] MarkerSizes { get; set; }
 
         /// <summary>
         /// Gets or sets the marker stroke. The default is <c>OxyColors.Automatic</c>.
@@ -690,7 +696,7 @@ namespace OxyPlot.Series
                     pointsToRender,
                     this.MarkerType,
                     this.MarkerOutline,
-                    new[] { this.MarkerSize },
+					this.MarkerSizes,
                     this.ActualMarkerFill,
                     this.MarkerStroke,
                     this.MarkerStrokeThickness,
