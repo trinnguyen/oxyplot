@@ -107,6 +107,7 @@ namespace OxyPlot.MonoTouch
                 // HandleTouchStarted initializes the entire multitouch gesture,
                 // with the first touch used for panning.
                 this.TouchEventArgs = this.activeTouches.First().ToTouchEventArgs(this.View);
+				State = UIGestureRecognizerState.Began;
             }
 
             this.CalculateStartingDistance();
