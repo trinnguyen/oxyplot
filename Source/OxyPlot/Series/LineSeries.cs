@@ -691,6 +691,10 @@ namespace OxyPlot.Series
             {
                 var markerBinOffset = this.MarkerResolution > 0 ? this.Transform(this.MinX, this.MinY) : default(ScreenPoint);
 
+				//always have right markersize data
+				if (this.MarkerSizes == null || this.MarkerSizes.Length == 0)
+					this.MarkerSizes = new[] { this.MarkerSize };
+				
                 rc.DrawMarkers(
                     clippingRect,
                     pointsToRender,

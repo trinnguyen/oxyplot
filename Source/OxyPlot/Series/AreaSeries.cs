@@ -89,6 +89,13 @@ namespace OxyPlot.Series
             }
         }
 
+		/// <summary>
+		/// Gets or sets the type of the marker for the second lists. The default is <c>MarkerType.None</c>.
+		/// </summary>
+		/// <value>The type of the marker.</value>
+		/// <remarks>If MarkerType.Custom is used, the MarkerOutline property must be specified.</remarks>
+		public MarkerType MarkerType2 { get; set; }
+
         /// <summary>
         /// Gets the second list of points.
         /// </summary>
@@ -245,7 +252,9 @@ namespace OxyPlot.Series
             // pts = SutherlandHodgmanClipping.ClipPolygon(clippingRect, pts);
             rc.DrawClippedPolygon(clippingRect, pts, minDistSquared, this.GetSelectableFillColor(this.ActualFill), OxyColors.Undefined);
 
-            var markerSizes = new[] { this.MarkerSize };
+			//always have right markersize data
+			if (this.MarkerSizes == null || this.MarkerSizes.Length == 0)
+				this.MarkerSizes = new[] { this.MarkerSize };
 
             // draw the markers on top
             rc.DrawMarkers(
@@ -253,7 +262,7 @@ namespace OxyPlot.Series
                 pts0,
                 this.MarkerType,
                 null,
-                markerSizes,
+				this.MarkerSizes,
                 this.MarkerFill,
                 this.MarkerStroke,
                 this.MarkerStrokeThickness,
@@ -261,9 +270,9 @@ namespace OxyPlot.Series
             rc.DrawMarkers(
                 clippingRect,
                 pts1,
-                this.MarkerType,
+				this.MarkerType2,
                 null,
-                markerSizes,
+				this.MarkerSizes,
                 this.MarkerFill,
                 this.MarkerStroke,
                 this.MarkerStrokeThickness,
