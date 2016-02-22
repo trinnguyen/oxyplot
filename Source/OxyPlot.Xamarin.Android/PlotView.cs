@@ -28,7 +28,8 @@ namespace OxyPlot.Xamarin.Android
         /// Android´s density-independent pixels (160 dpi).
         /// </summary>
         /// <remarks>See <a href="http://developer.android.com/guide/practices/screens_support.html">Supporting multiple screens.</a>.</remarks>
-        public const double Scale = 160d / 96d;
+        //        public const double Scale = 160d / 96d;
+        public static float Scale = global::Android.App.Application.Context.Resources.DisplayMetrics.Density;
 
         /// <summary>
         /// The rendering lock object.
@@ -75,8 +76,8 @@ namespace OxyPlot.Xamarin.Android
         /// </summary>
         /// <param name="context">The context.</param>
         /// <remarks>Use this constructor when creating the view from code.</remarks>
-        public PlotView(Context context) :
-            base(context)
+        public PlotView(Context context)
+            : base(context)
         {
         }
 
@@ -86,8 +87,8 @@ namespace OxyPlot.Xamarin.Android
         /// <param name="context">The context.</param>
         /// <param name="attrs">The attribute set.</param>
         /// <remarks>This constructor is called when inflating the view from XML.</remarks>
-        public PlotView(Context context, IAttributeSet attrs) :
-            base(context, attrs)
+        public PlotView(Context context, IAttributeSet attrs)
+            : base(context, attrs)
         {
         }
 
@@ -98,8 +99,8 @@ namespace OxyPlot.Xamarin.Android
         /// <param name="attrs">The attribute set.</param>
         /// <param name="defStyle">The definition style.</param>
         /// <remarks>This constructor performs inflation from XML and applies a class-specific base style.</remarks>
-        public PlotView(Context context, IAttributeSet attrs, int defStyle) :
-            base(context, attrs, defStyle)
+        public PlotView(Context context, IAttributeSet attrs, int defStyle)
+            : base(context, attrs, defStyle)
         {
         }
 
