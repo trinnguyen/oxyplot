@@ -52,6 +52,11 @@ namespace OxyPlot.Wpf
         private FrameworkElement currentTracker;
 
         /// <summary>
+        /// The current tracker template.
+        /// </summary>
+        private ControlTemplate currentTrackerTemplate;
+
+        /// <summary>
         /// The grid.
         /// </summary>
         private Grid grid;
@@ -181,6 +186,7 @@ namespace OxyPlot.Wpf
             {
                 this.overlays.Children.Remove(this.currentTracker);
                 this.currentTracker = null;
+                this.currentTrackerTemplate = null;
             }
         }
 
@@ -279,6 +285,12 @@ namespace OxyPlot.Wpf
 
             this.zoomControl = new ContentControl();
             this.overlays.Children.Add(this.zoomControl);
+
+            // add additional grid on top of everthing else to fix issue of mouse events getting lost
+            // it must be added last so it covers all other controls
+            var mouseGrid = new Grid();
+            mouseGrid.Background = Brushes.Transparent; // background must be set for hit test to work
+            this.grid.Children.Add(mouseGrid); 
         }
 
         /// <summary>
@@ -335,14 +347,15 @@ namespace OxyPlot.Wpf
                 return;
             }
 
-            var tracker = new ContentControl { Template = trackerTemplate };
-
             // ReSharper disable once RedundantNameQualifier
-            if (!object.ReferenceEquals(tracker, this.currentTracker))
+            if (!object.ReferenceEquals(trackerTemplate, this.currentTrackerTemplate))
             {
                 this.HideTracker();
+
+                var tracker = new ContentControl { Template = trackerTemplate };
                 this.overlays.Children.Add(tracker);
                 this.currentTracker = tracker;
+                this.currentTrackerTemplate = trackerTemplate;
             }
 
             if (this.currentTracker != null)
@@ -447,7 +460,7 @@ namespace OxyPlot.Wpf
 
             var bounds = element.TransformToAncestor(container).TransformBounds(new Rect(0.0, 0.0, element.ActualWidth, element.ActualHeight));
             var rect = new Rect(0.0, 0.0, container.ActualWidth, container.ActualHeight);
-            return rect.Contains(bounds.TopLeft) || rect.Contains(bounds.BottomRight);
+            return bounds.Left < rect.Right && bounds.Right > rect.Left && bounds.Top < rect.Bottom && bounds.Bottom > rect.Top;
         }
 
         /// <summary>
@@ -603,7 +616,7 @@ namespace OxyPlot.Wpf
         {
             if (!this.Dispatcher.CheckAccess())
             {
-                this.Dispatcher.BeginInvoke(DispatcherPriority.Background, action);
+                this.Dispatcher.BeginInvoke(DispatcherPriority.Loaded, action);
             }
             else
             {

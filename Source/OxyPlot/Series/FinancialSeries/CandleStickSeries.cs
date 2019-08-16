@@ -10,9 +10,6 @@
 namespace OxyPlot.Series
 {
     using System;
-    using System.Reflection;
-
-    using OxyPlot.Axes;
 
     /// <summary>
     /// Represents a "higher performance" ordered OHLC series for candlestick charts
@@ -32,11 +29,6 @@ namespace OxyPlot.Series
         /// The minimum X gap between successive data items
         /// </summary>
         private double minDx;
-
-        /// <summary>
-        /// The index of the data item at the start of visible window
-        /// </summary>
-        private int winIndex;
 
         /// <summary>
         /// Initializes a new instance of the <see cref = "CandleStickSeries" /> class.
@@ -66,22 +58,6 @@ namespace OxyPlot.Series
         public double CandleWidth { get; set; }
 
         /// <summary>
-        /// Append a bar to the series (must be in X order)
-        /// </summary>
-        /// <param name="bar">Bar to be appended.</param>
-        public void Append(object bar)
-        {
-            var nbar = this.ToNativeBar(bar);
-            var items = this.Items;
-            if (items.Count > 0 && items[items.Count - 1].X > nbar.X)
-            {
-                throw new ArgumentException("cannot append bar out of order, must be sequential in X");
-            }
-
-            items.Add(nbar);
-        }
-
-        /// <summary>
         /// Fast index of bar where max(bar[i].X) &lt;= x 
         /// </summary>
         /// <returns>The index of the bar closest to X, where max(bar[i].X) &lt;= x.</returns>
@@ -91,10 +67,10 @@ namespace OxyPlot.Series
         {
             if (startIndex < 0)
             {
-                startIndex = this.winIndex;
+                startIndex = this.WindowStartIndex;
             }
 
-            return HighLowItem.FindIndex(this.Items, x, startIndex);
+            return this.FindWindowStartIndex(this.Items, item => item.X, x, startIndex);
         }
 
         /// <summary>
@@ -130,9 +106,9 @@ namespace OxyPlot.Series
             // determine render range
             var xmin = this.XAxis.ActualMinimum;
             var xmax = this.XAxis.ActualMaximum;
-            this.winIndex = HighLowItem.FindIndex(items, xmin, this.winIndex);
+            this.WindowStartIndex = this.UpdateWindowStartIndex(items, item => item.X, xmin, this.WindowStartIndex);
 
-            for (int i = this.winIndex; i < nitems; i++)
+            for (int i = this.WindowStartIndex; i < nitems; i++)
             {
                 var bar = items[i];
 
@@ -159,32 +135,49 @@ namespace OxyPlot.Series
                 var max = new ScreenPoint(open.X, Math.Max(open.Y, close.Y));
                 var min = new ScreenPoint(open.X, Math.Min(open.Y, close.Y));
 
-                // Upper extent
-                rc.DrawClippedLine(
-                    clippingRect,
-                    new[] { high, min },
-                    0,
-                    lineColor,
-                    this.StrokeThickness,
-                    dashArray,
-                    this.LineJoin,
-                    true);
+                if (this.StrokeThickness > 0 && this.LineStyle != LineStyle.None)
+                {
+                    // Upper extent
+                    rc.DrawClippedLine(
+                        clippingRect,
+                        new[] { high, min },
+                        0,
+                        lineColor,
+                        this.StrokeThickness,
+                        dashArray,
+                        this.LineJoin,
+                        true);
 
-                // Lower extent
-                rc.DrawClippedLine(
-                    clippingRect,
-                    new[] { max, low },
-                    0,
-                    lineColor,
-                    this.StrokeThickness,
-                    dashArray,
-                    this.LineJoin,
-                    true);
+                    // Lower extent
+                    rc.DrawClippedLine(
+                        clippingRect,
+                        new[] { max, low },
+                        0,
+                        lineColor,
+                        this.StrokeThickness,
+                        dashArray,
+                        this.LineJoin,
+                        true);
+                }
 
                 // Body
                 var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-                var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
-                rc.DrawClippedRectangleAsPolygon(clippingRect, rect, fillColor, lineColor, this.StrokeThickness);
+
+                if (max.Y - min.Y < 1.0)
+                {
+                    var leftPoint = new ScreenPoint(openLeft.X - this.StrokeThickness, min.Y);
+                    var rightPoint = new ScreenPoint(openLeft.X + this.StrokeThickness + candlewidth, min.Y);
+                    rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, leftPoint.DistanceToSquared(rightPoint), lineColor, this.StrokeThickness, null, LineJoin.Miter, true);
+
+                    leftPoint = new ScreenPoint(openLeft.X - this.StrokeThickness, max.Y);
+                    rightPoint = new ScreenPoint(openLeft.X + this.StrokeThickness + candlewidth, max.Y);
+                    rc.DrawClippedLine(clippingRect, new[] { leftPoint, rightPoint }, leftPoint.DistanceToSquared(rightPoint), lineColor, this.StrokeThickness, null, LineJoin.Miter, true);
+                }
+                else
+                {
+                    var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
+                    rc.DrawClippedRectangleAsPolygon(clippingRect, rect, fillColor, lineColor, this.StrokeThickness);
+                }
             }
         }
 
@@ -206,13 +199,16 @@ namespace OxyPlot.Series
                 legendBox.Width,
                 this.XAxis.Transform(this.Items[0].X + datacandlewidth) - this.XAxis.Transform(this.Items[0].X));
 
-            rc.DrawLine(
-                new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
-                this.GetSelectableColor(this.ActualColor),
-                this.StrokeThickness,
-                dashArray,
-                LineJoin.Miter,
-                true);
+            if (this.StrokeThickness > 0 && this.LineStyle != LineStyle.None)
+            {
+                rc.DrawLine(
+                    new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
+                    this.GetSelectableColor(this.ActualColor),
+                    this.StrokeThickness,
+                    dashArray,
+                    LineJoin.Miter,
+                    true);
+            }
 
             rc.DrawRectangleAsPolygon(
                 new OxyRect(xmid - (candlewidth * 0.5), yclose, candlewidth, yopen - yclose),
@@ -244,7 +240,7 @@ namespace OxyPlot.Series
                 return null;
             }
 
-            var pidx = HighLowItem.FindIndex(this.Items, targetX, this.winIndex);
+            var pidx = this.FindWindowStartIndex(this.Items, item => item.X, targetX, this.WindowStartIndex);
             var nidx = ((pidx + 1) < this.Items.Count) ? pidx + 1 : pidx;
 
             Func<HighLowItem, double> distance = bar =>
@@ -295,8 +291,7 @@ namespace OxyPlot.Series
         protected internal override void UpdateData()
         {
             base.UpdateData();
-            this.winIndex = 0;
-
+            
             // determine minimum X gap between successive points
             var items = this.Items;
             var nitems = items.Count;
@@ -315,48 +310,6 @@ namespace OxyPlot.Series
             {
                 this.minDx = 1;
             }
-        }
-
-        /// <summary>
-        /// Convert incoming bar to native bar
-        /// </summary>
-        /// <returns>The native bar.</returns>
-        /// <param name="bar">Bar as object.</param>
-        private HighLowItem ToNativeBar(object bar)
-        {
-            var nativebar = bar as HighLowItem;
-
-            // if native bar can add direcly
-            if (nativebar != null)
-            {
-                return nativebar;
-            }
-
-            // otherwise must translate to native bar
-            var x = this.FieldValueOf(bar, this.DataFieldX);
-            var open = this.FieldValueOf(bar, this.DataFieldOpen);
-            var high = this.FieldValueOf(bar, this.DataFieldHigh);
-            var low = this.FieldValueOf(bar, this.DataFieldLow);
-            var close = this.FieldValueOf(bar, this.DataFieldClose);
-            return new HighLowItem(x, high, low, open, close);
-        }
-
-        /// <summary>
-        /// Gets the value of the specified property in the specified item. 
-        /// </summary>
-        /// <returns>The value of field.</returns>
-        /// <param name="item">Bar object.</param>
-        /// <param name="propertyName">Property name.</param>
-        private double FieldValueOf(object item, string propertyName)
-        {
-            if (propertyName != null)
-            {
-                var type = item.GetType();
-                var prop = type.GetRuntimeProperty(propertyName);
-                return Axis.ToDouble(prop.GetValue(item, null));
-            }
-            
-            return double.NaN;
         }
     }
 }

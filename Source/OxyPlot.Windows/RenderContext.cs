@@ -11,8 +11,8 @@ namespace OxyPlot.Windows
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
+    using System.Runtime.InteropServices.WindowsRuntime;
     using System.Threading.Tasks;
 
     using global::Windows.Foundation;
@@ -117,7 +117,11 @@ namespace OxyPlot.Windows
         /// <param name="thickness">The thickness.</param>
         public void DrawEllipse(OxyRect rect, OxyColor fill, OxyColor stroke, double thickness)
         {
-            var el = new Ellipse();
+            var el = new Ellipse
+            {
+                CompositeMode = ElementCompositeMode.SourceOver
+            };
+
             if (stroke.IsVisible())
             {
                 el.Stroke = new SolidColorBrush(stroke.ToColor());
@@ -146,7 +150,11 @@ namespace OxyPlot.Windows
         /// <param name="thickness">The stroke thickness.</param>
         public void DrawEllipses(IList<OxyRect> rectangles, OxyColor fill, OxyColor stroke, double thickness)
         {
-            var path = new Path();
+            var path = new Path
+            {
+                CompositeMode = ElementCompositeMode.SourceOver
+            };
+
             this.SetStroke(path, stroke, thickness);
             if (fill.IsVisible())
             {
@@ -186,7 +194,11 @@ namespace OxyPlot.Windows
             LineJoin lineJoin,
             bool aliased)
         {
-            var e = new Polyline();
+            var e = new Polyline
+            {
+                CompositeMode = ElementCompositeMode.SourceOver
+            };
+
             this.SetStroke(e, stroke, thickness, lineJoin, dashArray, aliased);
 
             var pc = new PointCollection();
@@ -218,7 +230,11 @@ namespace OxyPlot.Windows
             LineJoin lineJoin,
             bool aliased)
         {
-            var path = new Path();
+            var path = new Path
+            {
+                CompositeMode = ElementCompositeMode.SourceOver
+            };
+
             this.SetStroke(path, stroke, thickness, lineJoin, dashArray, aliased);
             var pg = new PathGeometry();
             for (int i = 0; i + 1 < points.Count; i += 2)
@@ -263,7 +279,11 @@ namespace OxyPlot.Windows
             LineJoin lineJoin,
             bool aliased)
         {
-            var po = new Polygon();
+            var po = new Polygon
+            {
+                CompositeMode = ElementCompositeMode.SourceOver
+            };
+
             this.SetStroke(po, stroke, thickness, lineJoin, dashArray, aliased);
 
             if (fill.IsVisible())
@@ -302,7 +322,11 @@ namespace OxyPlot.Windows
             LineJoin lineJoin,
             bool aliased)
         {
-            var path = new Path();
+            var path = new Path
+            {
+                CompositeMode = ElementCompositeMode.SourceOver
+            };
+
             this.SetStroke(path, stroke, thickness, lineJoin, dashArray, aliased);
             if (fill.IsVisible())
             {
@@ -343,7 +367,11 @@ namespace OxyPlot.Windows
         /// <param name="thickness">The stroke thickness.</param>
         public void DrawRectangle(OxyRect rect, OxyColor fill, OxyColor stroke, double thickness)
         {
-            var el = new Rectangle();
+            var el = new Rectangle
+            {
+                CompositeMode = ElementCompositeMode.SourceOver
+            };
+
             if (stroke.IsVisible())
             {
                 el.Stroke = new SolidColorBrush(stroke.ToColor());
@@ -372,7 +400,11 @@ namespace OxyPlot.Windows
         /// <param name="thickness">The stroke thickness.</param>
         public void DrawRectangles(IList<OxyRect> rectangles, OxyColor fill, OxyColor stroke, double thickness)
         {
-            var path = new Path();
+            var path = new Path
+            {
+                CompositeMode = ElementCompositeMode.SourceOver
+            };
+
             this.SetStroke(path, stroke, thickness);
             if (fill.IsVisible())
             {
@@ -786,31 +818,24 @@ namespace OxyPlot.Windows
                 return src;
             }
 
-            // TODO: improve conversion from byte array to random access stream
-            using (var ms = new MemoryStream(image.GetData()))
-            {
-                var bitmapImage = new BitmapImage();
-                bitmapImage.SetSource(ConvertToRandomAccessStream(ms).Result);
-                this.imageCache.Add(image, bitmapImage);
-                return bitmapImage;
-            }
+            var bitmapImage = new BitmapImage();
+            var imageStream = ConvertToRandomAccessStream(image.GetData()).GetAwaiter().GetResult();
+            bitmapImage.SetSource(imageStream);
+            this.imageCache.Add(image, bitmapImage);
+            return bitmapImage;
         }
 
         /// <summary>
-        /// Converts the specified memory stream to a <see cref="IRandomAccessStream" />.
+        /// Converts the specified byte array to a <see cref="IRandomAccessStream" />.
         /// </summary>
-        /// <param name="memoryStream"></param>
+        /// <param name="buffer"></param>
         /// <returns></returns>
-        private static async Task<IRandomAccessStream> ConvertToRandomAccessStream(MemoryStream memoryStream)
+        private static async Task<IRandomAccessStream> ConvertToRandomAccessStream(byte[] buffer)
         {
-            // https://iamabhik.wordpress.com/tag/convert-stream-to-irandomaccessstream/
+            //https://stackoverflow.com/questions/16397509/how-to-convert-byte-array-to-inmemoryrandomaccessstream-or-irandomaccessstream-i
             var randomAccessStream = new InMemoryRandomAccessStream();
-            var outputStream = randomAccessStream.GetOutputStreamAt(0);
-            var dw = new DataWriter(outputStream);
-            var task = Task.Run(() => dw.WriteBytes(memoryStream.ToArray()));
-            await task;
-            await dw.StoreAsync();
-            await outputStream.FlushAsync();
+            await randomAccessStream.WriteAsync(buffer.AsBuffer());
+            randomAccessStream.Seek(0);
             return randomAccessStream;
         }
     }

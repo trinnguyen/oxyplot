@@ -51,6 +51,29 @@ namespace ExampleLibrary
             return CreateTickStyleExample(TickStyle.Outside);
         }
 
+        [Example("TickStyle: Color major and minor ticks differently")]
+        public static PlotModel TickLineColor()
+        {
+            var plotModel1 = new PlotModel { Title = "Color major and minor ticks differently" };
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                Position = AxisPosition.Left,
+                MajorGridlineThickness = 3,
+                MinorGridlineThickness = 3,
+                TicklineColor = OxyColors.Blue,
+                MinorTicklineColor = OxyColors.Gray,
+            });
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                Position = AxisPosition.Bottom,
+                MajorGridlineThickness = 3,
+                MinorGridlineThickness = 3,
+                TicklineColor = OxyColors.Blue,
+                MinorTicklineColor = OxyColors.Gray,
+            });
+            return plotModel1;
+        }
+
         [Example("GridLinestyle: None (default)")]
         public static PlotModel GridlineStyleNone()
         {
@@ -182,6 +205,7 @@ namespace ExampleLibrary
                 Maximum = 50,
                 Minimum = -30,
                 PositionAtZeroCrossing = true,
+                AxislineStyle = LineStyle.Solid,
                 TickStyle = TickStyle.Crossing
             });
             plotModel1.Axes.Add(new LinearAxis
@@ -190,7 +214,58 @@ namespace ExampleLibrary
                 Minimum = -50,
                 Position = AxisPosition.Bottom,
                 PositionAtZeroCrossing = true,
+                AxislineStyle = LineStyle.Solid,
                 TickStyle = TickStyle.Crossing
+            });
+            return plotModel1;
+        }
+
+        [Example("Horizontal zero crossing axis")]
+        public static PlotModel HorizontalZeroCrossing()
+        {
+            var plotModel1 = new PlotModel
+            {
+                Title = "Bottom axis: PositionAtZeroCrossing = true"
+            };
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                Maximum = 50,
+                Minimum = -30,
+                Position = AxisPosition.Left,
+                PositionAtZeroCrossing = false,
+            });
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                Maximum = 70,
+                Minimum = -50,
+                Position = AxisPosition.Bottom,
+                PositionAtZeroCrossing = true,
+                AxislineStyle = LineStyle.Solid,
+            });
+            return plotModel1;
+        }
+
+        [Example("Vertical zero crossing axis")]
+        public static PlotModel VerticalZeroCrossing()
+        {
+            var plotModel1 = new PlotModel
+            {
+                Title = "Left axis: PositionAtZeroCrossing = true"
+            };
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                Maximum = 50,
+                Minimum = -30,
+                Position = AxisPosition.Left,
+                PositionAtZeroCrossing = true,
+                AxislineStyle = LineStyle.Solid,
+            });
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                Maximum = 70,
+                Minimum = -50,
+                Position = AxisPosition.Bottom,
+                PositionAtZeroCrossing = false,
             });
             return plotModel1;
         }
@@ -516,16 +591,29 @@ namespace ExampleLibrary
             return model;
         }
 
-        [Example("MinimumRange with Minimum")]
-        public static PlotModel MinimumRangeWithMinimum()
+        [Example("MinimumRange")]
+        public static PlotModel MinimumRange()
         {
-            var model = new PlotModel { Title = "MinimumRange of 5 with a Minimum of 0", Subtitle = "Should show a range from 0 to 5" };
+            var model = new PlotModel { Title = "MinimumRange = 400" };
             model.Axes.Add(
                 new LinearAxis
                 {
                     Position = AxisPosition.Left,
-                    Minimum = 0,
-                    MinimumRange = 5
+                    MinimumRange = 400
+                });
+
+            return model;
+        }
+
+        [Example("MaximumRange")]
+        public static PlotModel MaximumRange()
+        {
+            var model = new PlotModel { Title = "MaximumRange = 40" };
+            model.Axes.Add(
+                new LinearAxis
+                {
+                    Position = AxisPosition.Left,
+                    MaximumRange = 40
                 });
 
             return model;
@@ -1023,6 +1111,34 @@ namespace ExampleLibrary
             return plotModel1;
         }
 
+        [Example("MinimumMajorStep")]
+        public static PlotModel MinimumMajorStep()
+        {
+            var model = new PlotModel
+            {
+                Title = "Axes with MinimumMajorStep"
+            };
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "MinimuMajorStep = 1", Minimum = 0, Maximum = 2, MinimumMajorStep = 1 });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "MinimuMajorStep = 10", Minimum = 0, Maximum = 15, MinimumMajorStep = 10 });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Top, Title = "MinimuMajorStep = 0 (default)", Minimum = 0, Maximum = 2 });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Right, Title = "MinimuMajorStep = 0 (default)", Minimum = 0, Maximum = 15 });
+            return model;
+        }
+
+        [Example("MinimumMinorStep")]
+        public static PlotModel MinimumMinorStep()
+        {
+            var model = new PlotModel
+            {
+                Title = "Axes with MinimumMinorStep"
+            };
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "MinimumMinorStep = 1", Minimum = 0, Maximum = 20, MinimumMinorStep = 1 });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "MinimumMinorStep = 10", Minimum = 0, Maximum = 150, MinimumMinorStep = 10 });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Top, Title = "MinimumMinorStep = 0 (default)", Minimum = 0, Maximum = 20 });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Right, Title = "MinimumMinorStep = 0 (default)", Minimum = 0, Maximum = 150 });
+            return model;
+        }
+
         /// <summary>
         /// Creates an example with the specified <see cref="TickStyle" />.
         /// </summary>
@@ -1034,6 +1150,202 @@ namespace ExampleLibrary
             plotModel1.Axes.Add(new LinearAxis { Position = AxisPosition.Left, TickStyle = tickStyle });
             plotModel1.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, TickStyle = tickStyle });
             return plotModel1;
+        }
+        
+        [Example("Gridlines Cropping: Horizontal and vertical")]
+        public static PlotModel GridlineCroppingBoth()
+        {
+            var plotModel1 = new PlotModel { Title = "Gridline cropping" };
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot,
+                ExtraGridlines = new double[] { 46d },
+                ExtraGridlineColor = OxyColors.Red,
+                StartPosition = 0.1,
+                EndPosition = 0.4,
+                CropGridlines = true
+            });
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot,
+                ExtraGridlines = new double[] { 46d },
+                ExtraGridlineColor = OxyColors.Red,
+                StartPosition = 0.6,
+                EndPosition = 0.9,
+                CropGridlines = true
+            });
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot,
+                Position = AxisPosition.Bottom,
+                ExtraGridlines = new double[] { 46d },
+                ExtraGridlineColor = OxyColors.Red,
+                StartPosition = 0.1,
+                EndPosition = 0.4,
+                CropGridlines = true
+            });
+            plotModel1.Axes.Add(new LinearAxis
+            {
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot,
+                Position = AxisPosition.Bottom,
+                ExtraGridlines = new double[] { 46d },
+                ExtraGridlineColor = OxyColors.Red,
+                StartPosition = 0.6,
+                EndPosition = 0.9,
+                CropGridlines = true                
+            });
+            return plotModel1;
+        }
+
+        [Example("Multi vertical axes with lineSeries")]
+        public static PlotModel MultiVerticalAxes()
+        {
+            const string keyAxisY_Temperature = "axisY_Temperature";
+            const string keyAxisY_Pressure = "axisY_Pressure";
+            const string keyAxisY_Humidity = "axisY_Humidity";
+
+            var plotModel = new PlotModel()
+            {
+                Title = "Multi vertical axes with lineSeries",
+                LegendBackground = OxyColors.White,
+            };
+            var axisX_Time = new DateTimeAxis()
+            {
+                Title = "Time",
+                Position = AxisPosition.Bottom,
+                MajorGridlineStyle = LineStyle.Solid,
+                FontSize = 13,
+            };
+            plotModel.Axes.Add(axisX_Time);
+
+            LineSeries lineSeriesTemperature = null;
+            LineSeries lineSeriesPressure = null;
+            LineSeries lineSeriesHumidity = null;
+            LinearAxis axisY_Temperature = null;
+            LinearAxis axisY_Pressure = null;
+            LinearAxis axisY_Humidity = null;
+
+            //Initialization lineSeries temperature
+            {
+                axisY_Temperature = new LinearAxis()
+                {
+                    Title = "Temperature",
+                    Position = AxisPosition.Left,
+                    MajorGridlineStyle = LineStyle.None,
+                    PositionTier = 1,
+                    Key = keyAxisY_Temperature,
+                    IsAxisVisible = true,
+                };
+
+                lineSeriesTemperature = new LineSeries()
+                {
+                    Title = "Temperature",
+                    Color = OxyColors.Tomato,
+                    LineStyle = LineStyle.Solid,
+                    MarkerType = MarkerType.Circle,
+                    MarkerSize = 3,
+                    MarkerFill = OxyColors.Red,
+                    YAxisKey = keyAxisY_Temperature,
+                    IsVisible = true,
+                };
+
+                plotModel.Axes.Add(axisY_Temperature);
+                plotModel.Series.Add(lineSeriesTemperature);
+            }
+
+            // Initialization lineSeries pressure
+            {
+                axisY_Pressure = new LinearAxis()
+                {
+                    Title = "Pressure",
+                    Position = AxisPosition.Left,
+                    MajorGridlineStyle = LineStyle.None,
+                    PositionTier = 2,
+                    Key = keyAxisY_Pressure,
+                    IsAxisVisible = true,
+                };
+
+                lineSeriesPressure = new LineSeries()
+                {
+                    Title = "Pressure",
+                    Color = OxyColors.Peru,
+                    LineStyle = LineStyle.Solid,
+                    MarkerType = MarkerType.Circle,
+                    MarkerSize = 3,
+                    MarkerFill = OxyColors.Sienna,
+                    YAxisKey = keyAxisY_Pressure,
+                    IsVisible = true,
+                };
+
+                plotModel.Axes.Add(axisY_Pressure);
+                plotModel.Series.Add(lineSeriesPressure);
+            }
+
+            // Initialization lineSeries humidity
+            {
+                axisY_Humidity = new LinearAxis()
+                {
+                    Title = "Humidity",
+                    Position = AxisPosition.Left,
+                    MajorGridlineStyle = LineStyle.None,
+                    PositionTier = 3,
+                    Key = keyAxisY_Humidity,
+                    IsAxisVisible = true,
+                };
+
+                lineSeriesHumidity = new LineSeries()
+                {
+                    Title = "Humidity",
+                    Color = OxyColors.LightSkyBlue,
+                    LineStyle = LineStyle.Solid,
+                    MarkerType = MarkerType.Circle,
+                    MarkerSize = 3,
+                    MarkerFill = OxyColors.DeepSkyBlue,
+                    YAxisKey = keyAxisY_Humidity,
+                    IsVisible = true,
+                };
+
+                plotModel.Axes.Add(axisY_Humidity);
+                plotModel.Series.Add(lineSeriesHumidity);
+            }
+
+            // Add points
+            {
+                lineSeriesTemperature.Points.Clear();
+                lineSeriesPressure.Points.Clear();
+                lineSeriesHumidity.Points.Clear();
+
+                var timeSpan = TimeSpan.FromSeconds(1);
+                var time = new DateTime(2018, 09, 10);
+                int countPoints = 100;
+                for (int i = 1; i <= countPoints; i++)
+                {
+                    double temperature = 20 + Math.Sin(i);
+                    double pressure = 760 +  1.5 * Math.Cos(1.5 * i);
+                    double humidity = 50 +  2.0 * Math.Sin(2.0 * i);
+
+                    lineSeriesTemperature.Points.Add(DateTimeAxis.CreateDataPoint(time, temperature));
+                    lineSeriesPressure.Points.Add(DateTimeAxis.CreateDataPoint(time, pressure));
+                    lineSeriesHumidity.Points.Add(DateTimeAxis.CreateDataPoint(time,  humidity));
+
+                    time += timeSpan;
+                }
+
+                axisY_Temperature.Minimum = 10;
+                axisY_Temperature.Maximum = 23;
+
+                axisY_Pressure.Minimum = 750;
+                axisY_Pressure.Maximum = 770;
+
+                axisY_Humidity.Minimum = 47;
+                axisY_Humidity.Maximum = 60;
+            }
+
+            return plotModel;
         }
     }
 }

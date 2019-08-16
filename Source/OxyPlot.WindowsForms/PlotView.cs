@@ -98,6 +98,9 @@ namespace OxyPlot.WindowsForms
             this.ZoomRectangleCursor = Cursors.SizeNWSE;
             this.ZoomHorizontalCursor = Cursors.SizeWE;
             this.ZoomVerticalCursor = Cursors.SizeNS;
+
+            var DoCopy = new DelegatePlotCommand<OxyKeyEventArgs>((view, controller, args) => this.DoCopy(view, args));
+            this.ActualController.BindKeyDown(OxyKey.C, OxyModifierKeys.Control, DoCopy);
         }
 
         /// <summary>
@@ -311,12 +314,12 @@ namespace OxyPlot.WindowsForms
         {
             if (this.trackerLabel == null)
             {
-                this.trackerLabel = new Label { Parent = this, BackColor = Color.LightSkyBlue, AutoSize = true };
+                this.trackerLabel = new Label { Parent = this, BackColor = Color.LightSkyBlue, AutoSize = true, Padding = new Padding(5) };
             }
 
             this.trackerLabel.Text = data.ToString();
-            this.trackerLabel.Top = (int)data.Position.Y;
-            this.trackerLabel.Left = (int)data.Position.X;
+            this.trackerLabel.Top = (int)data.Position.Y - this.trackerLabel.Height;
+            this.trackerLabel.Left = (int)data.Position.X - (this.trackerLabel.Width / 2);
             this.trackerLabel.Visible = true;
         }
 
@@ -504,12 +507,34 @@ namespace OxyPlot.WindowsForms
         }
 
         /// <summary>
+        /// Disposes the PlotView.
+        /// </summary>
+        /// <param name="disposing">Whether to dispose managed resources or not.</param>
+        protected override void Dispose(bool disposing)
+        {
+            bool disposed = this.IsDisposed;
+
+            base.Dispose(disposing);
+
+            if (disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                this.renderContext.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Gets the current modifier keys.
         /// </summary>
         /// <returns>A <see cref="OxyModifierKeys" /> value.</returns>
         private static OxyModifierKeys GetModifiers()
         {
             var modifiers = OxyModifierKeys.None;
+
             // ReSharper disable once RedundantNameQualifier
             if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift)
             {
@@ -529,6 +554,28 @@ namespace OxyPlot.WindowsForms
             }
 
             return modifiers;
+        }
+
+        /// <summary>
+        /// Performs the copy operation.
+        /// </summary>
+        private void DoCopy(IPlotView view, OxyInputEventArgs args)
+        {
+            var background = this.ActualModel.Background.IsVisible() ? this.ActualModel.Background : this.ActualModel.Background;
+            if (background.IsInvisible())
+            {
+                background = OxyColors.White;
+            }
+
+            var exporter = new PngExporter
+            {
+                Width = this.ClientRectangle.Width,
+                Height = this.ClientRectangle.Height,
+                Background = background
+            };
+
+            var bitmap = exporter.ExportToBitmap(this.ActualModel);
+            Clipboard.SetImage(bitmap);
         }
     }
 }

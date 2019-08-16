@@ -203,6 +203,11 @@ namespace OxyPlot
         private int currentColorIndex;
 
         /// <summary>
+        /// Flags if the data has been updated.
+        /// </summary>
+        private bool isDataUpdated;
+
+        /// <summary>
         /// The last update exception.
         /// </summary>
         /// <value>The exception or <c>null</c> if there was no exceptions during the last update.</value>
@@ -267,6 +272,7 @@ namespace OxyPlot
             this.LegendTitleColor = OxyColors.Automatic;
 
             this.LegendMaxWidth = double.NaN;
+            this.LegendMaxHeight = double.NaN;
             this.LegendPlacement = LegendPlacement.Inside;
             this.LegendPosition = LegendPosition.RightTop;
             this.LegendOrientation = LegendOrientation.Vertical;
@@ -476,6 +482,12 @@ namespace OxyPlot
         /// </summary>
         /// <value>The max width of the legend.</value>
         public double LegendMaxWidth { get; set; }
+
+        /// <summary>
+        /// Gets or sets the max height of the legend.
+        /// </summary>
+        /// <value>The max height of the legend.</value>
+        public double LegendMaxHeight { get; set; }
 
         /// <summary>
         /// Gets or sets the legend orientation.
@@ -844,6 +856,11 @@ namespace OxyPlot
 
             foreach (var axis in this.Axes)
             {
+                if(!axis.IsAxisVisible)
+                {
+                    continue;
+                }
+
                 if (axis is IColorAxis)
                 {
                     continue;
@@ -1030,12 +1047,14 @@ namespace OxyPlot
                     var visibleSeries = this.Series.Where(s => s.IsVisible).ToArray();
 
                     // Update data of the series
-                    if (updateData)
+                    if (updateData || !this.isDataUpdated)
                     {
                         foreach (var s in visibleSeries)
                         {
                             s.UpdateData();
                         }
+
+                        this.isDataUpdated = true;
                     }
 
                     // Updates axes with information from the series
@@ -1063,7 +1082,7 @@ namespace OxyPlot
                     this.ResetDefaultColor();
                     foreach (var s in visibleSeries)
                     {
-                        s.SetDefaultValues(this);
+                        s.SetDefaultValues();
                     }
 
                     this.OnUpdated();
@@ -1079,20 +1098,35 @@ namespace OxyPlot
         /// Gets the axis for the specified key.
         /// </summary>
         /// <param name="key">The axis key.</param>
-        /// <param name="defaultAxis">The default axis.</param>
-        /// <returns>The axis, or the defaultAxis if the key is not specified.</returns>
+        /// <returns>The axis that corresponds with the key.</returns>
         /// <exception cref="System.InvalidOperationException">Cannot find axis with the specified key.</exception>
+        public Axis GetAxis(string key)
+        {
+            if (key == null)
+            {
+                throw new ArgumentException("Axis key cannot be null.");
+            }
+
+            var axis = this.Axes.FirstOrDefault(a => a.Key == key);
+            if (axis == null)
+            {
+                throw new InvalidOperationException($"Cannot find axis with Key = \"{key}\"");
+            }
+            return axis;
+        }
+
+        /// <summary>
+        /// Gets the axis for the specified key, or returns a default value.
+        /// </summary>
+        /// <param name="key">The axis key.</param>
+        /// <param name="defaultAxis">The default axis.</param>
+        /// <returns>defaultAxis if key is empty or does not exist; otherwise, the axis that corresponds with the key.</returns>
         public Axis GetAxisOrDefault(string key, Axis defaultAxis)
         {
             if (key != null)
             {
-                var axis = this.Axes.FirstOrDefault(a => a.Key == key);
-                if (axis == null)
-                {
-                    throw new InvalidOperationException(string.Format("Cannot find axis with Key = \"{0}\"", key));
-                }
-
-                return axis;
+                var axis = this.Axes.FirstOrDefault(a => a.Key == key);                
+                return axis != null ? axis : defaultAxis;
             }
 
             return defaultAxis;
@@ -1138,7 +1172,10 @@ namespace OxyPlot
         /// Raises the TrackerChanged event.
         /// </summary>
         /// <param name="result">The result.</param>
-        protected internal virtual void OnTrackerChanged(TrackerHitResult result)
+        /// <remarks>
+        /// This method is public so custom implementations of tracker manipulators can invoke this method.
+        /// </remarks>
+        public void RaiseTrackerChanged(TrackerHitResult result)
         {
             var handler = this.TrackerChanged;
             if (handler != null)
@@ -1146,6 +1183,15 @@ namespace OxyPlot
                 var args = new TrackerEventArgs { HitResult = result };
                 handler(this, args);
             }
+        }
+
+        /// <summary>
+        /// Raises the TrackerChanged event.
+        /// </summary>
+        /// <param name="result">The result.</param>
+        protected internal virtual void OnTrackerChanged(TrackerHitResult result)
+        {
+            this.RaiseTrackerChanged(result);
         }
 
         /// <summary>

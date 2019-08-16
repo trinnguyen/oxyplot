@@ -315,13 +315,22 @@ namespace OxyPlot.Series
 
                 // Body
                 var openLeft = open + new ScreenVector(-candlewidth * 0.5, 0);
-                var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
-                rc.DrawClippedRectangleAsPolygon(
-                    clippingBar,
-                    rect,
-                    fillColor,
-                    lineColor,
-                    this.StrokeThickness);
+
+                if (max.Y - min.Y < 1.0)
+                {
+                    var leftPoint = new ScreenPoint(openLeft.X - this.StrokeThickness, min.Y);
+                    var rightPoint = new ScreenPoint(openLeft.X + this.StrokeThickness + candlewidth, min.Y);
+                    rc.DrawClippedLine(clippingBar, new[] { leftPoint, rightPoint }, leftPoint.DistanceToSquared(rightPoint), lineColor, this.StrokeThickness, null, LineJoin.Miter, true);
+
+                    leftPoint = new ScreenPoint(openLeft.X - this.StrokeThickness, max.Y);
+                    rightPoint = new ScreenPoint(openLeft.X + this.StrokeThickness + candlewidth, max.Y);
+                    rc.DrawClippedLine(clippingBar, new[] { leftPoint, rightPoint }, leftPoint.DistanceToSquared(rightPoint), lineColor, this.StrokeThickness, null, LineJoin.Miter, true);
+                }
+                else
+                {
+                    var rect = new OxyRect(openLeft.X, min.Y, candlewidth, max.Y - min.Y);
+                    rc.DrawClippedRectangleAsPolygon(clippingBar, rect, fillColor, lineColor, this.StrokeThickness);
+                }
 
                 // Volume Part
                 if (this.VolumeAxis == null || this.VolumeStyle == VolumeStyle.None)
@@ -381,34 +390,37 @@ namespace OxyPlot.Series
                 }
             }
 
-            // draw volume & bar separation line
-            if (this.VolumeStyle != VolumeStyle.None)
+            if (this.SeparatorStrokeThickness > 0 && this.SeparatorLineStyle != LineStyle.None)
             {
-                var ysep = (clippingSep.Bottom + clippingSep.Top) / 2.0;
-                rc.DrawClippedLine(
-                    clippingSep,
-                    new[] { new ScreenPoint(clippingSep.Left, ysep), new ScreenPoint(clippingSep.Right, ysep) },
-                    0,
-                    this.SeparatorColor,
-                    this.SeparatorStrokeThickness,
-                    this.SeparatorLineStyle.GetDashArray(),
-                    LineJoin.Miter,
-                    true);
-            }
+                // draw volume & bar separation line
+                if (this.VolumeStyle != VolumeStyle.None)
+                {
+                    var ysep = (clippingSep.Bottom + clippingSep.Top) / 2.0;
+                    rc.DrawClippedLine(
+                        clippingSep,
+                        new[] { new ScreenPoint(clippingSep.Left, ysep), new ScreenPoint(clippingSep.Right, ysep) },
+                        0,
+                        this.SeparatorColor,
+                        this.SeparatorStrokeThickness,
+                        this.SeparatorLineStyle.GetDashArray(),
+                        LineJoin.Miter,
+                        true);
+                }
 
-            // draw volume y=0 line
-            if (this.VolumeAxis != null && this.VolumeStyle == VolumeStyle.PositiveNegative)
-            {
-                var y0 = this.VolumeAxis.Transform(0);
-                rc.DrawClippedLine(
-                    clippingVol,
-                    new[] { new ScreenPoint(clippingVol.Left, y0), new ScreenPoint(clippingVol.Right, y0) },
-                    0,
-                    OxyColors.Goldenrod,
-                    this.SeparatorStrokeThickness,
-                    this.SeparatorLineStyle.GetDashArray(),
-                    LineJoin.Miter,
-                    true);
+                // draw volume y=0 line
+                if (this.VolumeAxis != null && this.VolumeStyle == VolumeStyle.PositiveNegative)
+                {
+                    var y0 = this.VolumeAxis.Transform(0);
+                    rc.DrawClippedLine(
+                        clippingVol,
+                        new[] { new ScreenPoint(clippingVol.Left, y0), new ScreenPoint(clippingVol.Right, y0) },
+                        0,
+                        OxyColors.Goldenrod,
+                        this.SeparatorStrokeThickness,
+                        this.SeparatorLineStyle.GetDashArray(),
+                        LineJoin.Miter,
+                        true);
+                }
             }
         }
 
@@ -433,19 +445,22 @@ namespace OxyPlot.Series
                 legendBox.Width,
                 this.XAxis.Transform(this.data[0].X + datacandlewidth) - this.XAxis.Transform(this.data[0].X));
 
-            rc.DrawLine(
-                new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
-                lineUp,
-                this.StrokeThickness,
-                dashArray,
-                LineJoin.Miter,
-                true);
+            if (this.StrokeThickness > 0)
+            {
+                rc.DrawLine(
+                    new[] { new ScreenPoint(xmid, legendBox.Top), new ScreenPoint(xmid, legendBox.Bottom) },
+                    lineUp,
+                    this.StrokeThickness,
+                    dashArray,
+                    LineJoin.Miter,
+                    true);
 
-            rc.DrawRectangleAsPolygon(
-                new OxyRect(xmid - (candlewidth * 0.5), yclose, candlewidth, yopen - yclose),
-                fillUp,
-                lineUp,
-                this.StrokeThickness);
+                rc.DrawRectangleAsPolygon(
+                    new OxyRect(xmid - (candlewidth * 0.5), yclose, candlewidth, yopen - yclose),
+                    fillUp,
+                    lineUp,
+                    this.StrokeThickness);
+            }
         }
 
         /// <summary>
@@ -573,7 +588,7 @@ namespace OxyPlot.Series
 
             var yquartile = (ymax - ymin) / 4.0;
 
-            switch (VolumeStyle)
+            switch (this.VolumeStyle)
             {
                 case VolumeStyle.PositiveNegative:
                     ymin = -(yavg + (yquartile / 2.0));
@@ -584,7 +599,6 @@ namespace OxyPlot.Series
                     ymin = 0;
                     break;
                 default:
-                case VolumeStyle.Combined:
                     ymax = yavg + (yquartile / 2.0);
                     ymin = 0;
                     break;
@@ -605,10 +619,10 @@ namespace OxyPlot.Series
 
             double xmin = double.MaxValue;
             double xmax = double.MinValue;
-            double ymin_bar = double.MaxValue;
-            double ymax_bar = double.MinValue;
-            double ymin_vol = double.MaxValue;
-            double ymax_vol = double.MinValue;
+            double yminBar = double.MaxValue;
+            double ymaxBar = double.MinValue;
+            double yminVol = double.MaxValue;
+            double ymaxVol = double.MinValue;
 
             var nvol = 0.0;
             var cumvol = 0.0;
@@ -635,19 +649,19 @@ namespace OxyPlot.Series
 
                 xmin = Math.Min(xmin, bar.X);
                 xmax = Math.Max(xmax, bar.X);
-                ymin_bar = Math.Min(ymin_bar, bar.Low);
-                ymax_bar = Math.Max(ymax_bar, bar.High);
-                ymin_vol = Math.Min(ymin_vol, -bar.SellVolume);
-                ymax_vol = Math.Max(ymax_vol, +bar.BuyVolume);
+                yminBar = Math.Min(yminBar, bar.Low);
+                ymaxBar = Math.Max(ymaxBar, bar.High);
+                yminVol = Math.Min(yminVol, -bar.SellVolume);
+                ymaxVol = Math.Max(ymaxVol, +bar.BuyVolume);
             }
 
             this.MinX = Math.Max(this.XAxis.FilterMinValue, xmin);
             this.MaxX = Math.Min(this.XAxis.FilterMaxValue, xmax);
-            this.MinY = Math.Max(this.YAxis.FilterMinValue, ymin_bar);
-            this.MaxY = Math.Min(this.YAxis.FilterMaxValue, ymax_bar);
+            this.MinY = Math.Max(this.YAxis.FilterMinValue, yminBar);
+            this.MaxY = Math.Min(this.YAxis.FilterMaxValue, ymaxBar);
 
-            this.MinimumVolume = ymin_vol;
-            this.MaximumVolume = ymax_vol;
+            this.MinimumVolume = yminVol;
+            this.MaximumVolume = ymaxVol;
             this.AverageVolume = cumvol / nvol;
         }
 

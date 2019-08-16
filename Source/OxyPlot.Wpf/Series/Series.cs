@@ -32,6 +32,12 @@ namespace OxyPlot.Wpf
         public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
             "Title", typeof(string), typeof(Series), new PropertyMetadata(null, AppearanceChanged));
 
+         /// <summary>
+        /// Identifies the <see cref="RenderInLegend"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty RenderInLegendProperty = DependencyProperty.Register(
+            "RenderInLegend", typeof(bool), typeof(Series), new PropertyMetadata(true, AppearanceChanged));
+
         /// <summary>
         /// Identifies the <see cref="TrackerFormatString"/> dependency property.
         /// </summary>
@@ -58,7 +64,7 @@ namespace OxyPlot.Wpf
         /// </summary>
         static Series()
         {
-            VisibilityProperty.OverrideMetadata(typeof(Series), new PropertyMetadata(Visibility.Visible, AppearanceChanged));
+            VisibilityProperty.OverrideMetadata(typeof(Series), new PropertyMetadata(Visibility.Visible, DataChanged));
             BackgroundProperty.OverrideMetadata(typeof(Series), new FrameworkPropertyMetadata(null, AppearanceChanged));
         }
 
@@ -104,6 +110,22 @@ namespace OxyPlot.Wpf
             set
             {
                 this.SetValue(TitleProperty, value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the series should be rendered in the legend.
+        /// </summary>
+        public bool RenderInLegend 
+        {
+            get
+            {
+                return (bool)this.GetValue(RenderInLegendProperty);
+            }
+
+            set
+            {
+                this.SetValue(RenderInLegendProperty, value);
             }
         }
 
@@ -209,6 +231,7 @@ namespace OxyPlot.Wpf
         {
             s.Background = this.Background.ToOxyColor();
             s.Title = this.Title;
+            s.RenderInLegend = this.RenderInLegend;
             s.TrackerFormatString = this.TrackerFormatString;
             s.TrackerKey = this.TrackerKey;
             s.TrackerFormatString = this.TrackerFormatString;

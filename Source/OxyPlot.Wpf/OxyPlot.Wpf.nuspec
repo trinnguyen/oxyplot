@@ -9,7 +9,7 @@
     <releaseNotes></releaseNotes>
     <licenseUrl>https://raw.githubusercontent.com/oxyplot/oxyplot/master/LICENSE</licenseUrl>
     <projectUrl>http://oxyplot.org/</projectUrl>
-    <iconUrl>http://resources.oxyplot.org/icons/oxyplot_128.png</iconUrl>
+    <iconUrl>https://raw.githubusercontent.com/oxyplot/oxyplot/develop/Icons/OxyPlot_128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <tags>wpf plotting plot charting chart</tags>
     <dependencies>
@@ -17,10 +17,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="..\..\Output\NET45\OxyPlot.Wpf.???" target="lib\net45" />
-    <file src="..\..\Output\NET40\OxyPlot.Wpf.???" target="lib\net40" />
-    <file src="..\..\Output\NET45\OxyPlot.Xps.???" target="lib\net45" />
-    <file src="..\..\Output\NET40\OxyPlot.Xps.???" target="lib\net40" />
+    <file src="bin\Release\OxyPlot.Wpf.???" target="lib\net452" />
 
     <file src="..\..\LICENSE" />
     <file src="..\..\AUTHORS" />
