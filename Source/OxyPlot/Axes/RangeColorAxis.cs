@@ -185,32 +185,38 @@ namespace OxyPlot.Axes
                         OxyColors.Undefined);
                 };
 
+                // if the axis is reversed then the min and max values need to be swapped.
+                double effectiveMaxY = this.Transform(this.IsReversed ? this.ActualMinimum : this.ActualMaximum);
+                double effectiveMinY = this.Transform(this.IsReversed ? this.ActualMaximum : this.ActualMinimum);
+
                 foreach (ColorRange range in this.ranges)
                 {
                     double ylow = this.Transform(range.LowerBound);
                     double yhigh = this.Transform(range.UpperBound);
 
-                    double ymax = this.Transform(this.ActualMaximum);
-                    double ymin = this.Transform(this.ActualMinimum);
-
-                    if (ylow < ymax)
+                    if (this.IsHorizontal())
                     {
-                        continue;
+                        if (ylow < effectiveMinY)
+                        {
+                            ylow = effectiveMinY;
+                        }
+
+                        if (yhigh > effectiveMaxY)
+                        {
+                            yhigh = effectiveMaxY;
+                        }
                     }
-
-                    if (yhigh > ymin)
+                    else
                     {
-                        continue;
-                    }
+                        if (ylow > effectiveMinY)
+                        {
+                            ylow = effectiveMinY;
+                        }
 
-                    if (ylow > ymin)
-                    {
-                        ylow = ymin;
-                    }
-
-                    if (yhigh < ymax)
-                    {
-                        yhigh = ymax;
+                        if (yhigh < effectiveMaxY)
+                        {
+                            yhigh = effectiveMaxY;
+                        }
                     }
 
                     drawColorRect(ylow, yhigh, range.Color);

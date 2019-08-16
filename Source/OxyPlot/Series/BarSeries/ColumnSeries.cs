@@ -119,8 +119,17 @@ namespace OxyPlot.Series
                     va = VerticalAlignment.Bottom;
                     break;
                 default: // outside
-                    pt = new ScreenPoint((rect.Left + rect.Right) / 2, rect.Top - this.LabelMargin);
-                    va = VerticalAlignment.Bottom;
+                    // Puts label below for negative series, above for positive
+                    if (value < 0)
+                    {
+                        pt = new ScreenPoint((rect.Left + rect.Right) / 2, rect.Bottom + this.LabelMargin);
+                        va = VerticalAlignment.Top;
+                    }
+                    else
+                    {
+                        pt = new ScreenPoint((rect.Left + rect.Right) / 2, rect.Top - this.LabelMargin);
+                        va = VerticalAlignment.Bottom;
+                    }
                     break;
             }
 
@@ -135,6 +144,18 @@ namespace OxyPlot.Series
                 0,
                 HorizontalAlignment.Center,
                 va);
+        }
+
+        /// <summary>
+        /// Updates the <see cref="F:itemsSourceItems" /> from the <see cref="P:ItemsSource" /> and data fields.
+        /// </summary>
+        protected override void UpdateFromDataFields()
+        {
+            // Using reflection to add items by value and color (optional)
+            var filler = new ListBuilder<ColumnItem>();
+            filler.Add(this.ValueField, double.NaN);
+            filler.Add(this.ColorField, OxyColors.Automatic);
+            filler.Fill(this.ItemsSourceItems, this.ItemsSource, args => new ColumnItem(Convert.ToDouble(args[0])) { Color = (OxyColor)args[1] });
         }
     }
 }

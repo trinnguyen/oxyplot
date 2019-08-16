@@ -60,6 +60,15 @@ namespace OxyPlot.Wpf
             ValidatePaletteSize);
 
         /// <summary>
+        /// Identifies the <see cref="InvalidNumberColor"/> dependency property.
+        /// </summary>
+        public static readonly DependencyProperty InvalidNumberColorProperty = DependencyProperty.Register(
+            "InvalidNumberColor",
+            typeof(Color),
+            typeof(LinearColorAxis),
+            new PropertyMetadata(Colors.Gray, AppearanceChanged));
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="LinearColorAxis"/> class.
         /// </summary>
         public LinearColorAxis()
@@ -69,13 +78,29 @@ namespace OxyPlot.Wpf
         }
 
         /// <summary>
+        /// Gets or sets the color used to represent NaN values.
+        /// </summary>
+        public Color InvalidNumberColor
+        {
+            get
+            {
+                return (Color)this.GetValue(InvalidNumberColorProperty);
+            }
+
+            set
+            {
+                this.SetValue(InvalidNumberColorProperty, value);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the palette size.
         /// </summary>
         public int PaletteSize
         {
             get
             {
-                return (int)GetValue(PaletteSizeProperty);
+                return (int)this.GetValue(PaletteSizeProperty);
             }
 
             set
@@ -91,7 +116,7 @@ namespace OxyPlot.Wpf
         {
             get
             {
-                return (Color)GetValue(HighColorProperty);
+                return (Color)this.GetValue(HighColorProperty);
             }
 
             set
@@ -107,7 +132,7 @@ namespace OxyPlot.Wpf
         {
             get
             {
-                return (Color)GetValue(LowColorProperty);
+                return (Color)this.GetValue(LowColorProperty);
             }
 
             set
@@ -123,7 +148,7 @@ namespace OxyPlot.Wpf
         {
             get
             {
-                return (GradientStopCollection)GetValue(GradientStopsProperty);
+                return (GradientStopCollection)this.GetValue(GradientStopsProperty);
             }
 
             set
@@ -150,7 +175,7 @@ namespace OxyPlot.Wpf
         protected override void SynchronizeProperties()
         {
             base.SynchronizeProperties();
-            var axis = InternalAxis as Axes.LinearColorAxis;
+            var axis = this.InternalAxis as Axes.LinearColorAxis;
             Trace.Assert(axis != null);
             if (this.GradientStops != null)
             {
@@ -161,6 +186,7 @@ namespace OxyPlot.Wpf
 
             axis.HighColor = this.HighColor.ToOxyColor();
             axis.LowColor = this.LowColor.ToOxyColor();
+            axis.InvalidNumberColor = this.InvalidNumberColor.ToOxyColor();
             axis.Minimum = this.Minimum;
             axis.Maximum = this.Maximum;
         }

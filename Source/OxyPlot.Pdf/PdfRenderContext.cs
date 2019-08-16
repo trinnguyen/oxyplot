@@ -141,7 +141,7 @@ namespace OxyPlot.Pdf
                     pen.LineJoin = XLineJoin.Bevel;
                     break;
 
-                // The default LineJoin is Miter
+                    // The default LineJoin is Miter
             }
 
             this.g.DrawLines(pen, ToPoints(points));
@@ -193,7 +193,7 @@ namespace OxyPlot.Pdf
                         pen.LineJoin = XLineJoin.Bevel;
                         break;
 
-                    // The default LineJoin is Miter
+                        // The default LineJoin is Miter
                 }
 
                 this.g.DrawPolygon(pen, pts);
@@ -257,14 +257,9 @@ namespace OxyPlot.Pdf
                 fs = XFontStyle.Bold;
             }
 
-            var font = new XFont(fontFamily, (float)fontSize * FontsizeFactor, fs);
+            var font = CreateFont(fontFamily, fontSize, fs);
 
             var size = this.g.MeasureString(text, font);
-
-#if SILVERLIGHT
-            // Correct the height, MeasureString returns 2x height
-            size.Height *= 0.5;
-#endif
 
             if (maxSize != null)
             {
@@ -306,7 +301,7 @@ namespace OxyPlot.Pdf
             this.g.TranslateTransform(dx, dy);
             if (Math.Abs(rotate) > double.Epsilon)
             {
-                this.g.RotateAtTransform((float)rotate, new XPoint((float)p.X + (float)(size.Width / 2.0), (float)p.Y));
+                this.g.RotateAtTransform((float)rotate, new XPoint((float)p.X - dx, (float)p.Y - dy));
             }
 
             this.g.TranslateTransform((float)p.X, (float)p.Y);
@@ -338,13 +333,8 @@ namespace OxyPlot.Pdf
                 fs = XFontStyle.Bold;
             }
 
-            var font = new XFont(fontFamily, (float)fontSize * FontsizeFactor, fs);
+            var font = CreateFont(fontFamily, fontSize, fs);
             var size = this.g.MeasureString(text, font);
-
-#if SILVERLIGHT
-            // Correct the height, MeasureString returns 2x height
-            size.Height *= 0.5;
-#endif
 
             return new OxySize(size.Width, size.Height);
         }
@@ -467,6 +457,20 @@ namespace OxyPlot.Pdf
         }
 
         /// <summary>
+        /// Creates the specified font.
+        /// </summary>
+        /// <param name="fontFamily">The font family.</param>
+        /// <param name="fontSize">Size of the font.</param>
+        /// <param name="fontStyle">The font style.</param>
+        /// <returns>The font.</returns>
+        private static XFont CreateFont(string fontFamily, double fontSize, XFontStyle fontStyle)
+        {
+            var pdfOptions = new XPdfFontOptions(PdfFontEncoding.Unicode, PdfFontEmbedding.Default);
+            var font = new XFont(fontFamily, (float)fontSize * FontsizeFactor, fontStyle, pdfOptions);
+            return font;
+        }
+
+        /// <summary>
         /// Gets or creates a <see cref="XImage" /> from the specified image.
         /// </summary>
         /// <param name="source">The source.</param>
@@ -489,7 +493,6 @@ namespace OxyPlot.Pdf
                 return src;
             }
 
-#if !SILVERLIGHT
             XImage bitmap;
             using (var ms = new MemoryStream(source.GetData()))
             {
@@ -499,14 +502,6 @@ namespace OxyPlot.Pdf
 
             this.imageCache.Add(source, bitmap);
             return bitmap;
-#else
-            using (var ms = new MemoryStream(source.GetData()))
-            {
-                var bitmap = XImage.FromStream(ms);
-                this.imageCache.Add(source, bitmap);
-                return bitmap;
-            }
-#endif
         }
 
         /// <summary>

@@ -119,8 +119,17 @@ namespace OxyPlot.Series
                     ha = HorizontalAlignment.Left;
                     break;
                 default: // Outside
-                    pt = new ScreenPoint(rect.Right + this.LabelMargin, (rect.Top + rect.Bottom) / 2);
-                    ha = HorizontalAlignment.Left;
+                    // Puts label left for negative series, right for positive
+                    if (value < 0)
+                    {
+                        pt = new ScreenPoint(rect.Left - this.LabelMargin, (rect.Top + rect.Bottom) / 2);
+                        ha = HorizontalAlignment.Right;
+                    }
+                    else
+                    {
+                        pt = new ScreenPoint(rect.Right + this.LabelMargin, (rect.Top + rect.Bottom) / 2);
+                        ha = HorizontalAlignment.Left;
+                    }
                     break;
             }
 
@@ -128,13 +137,26 @@ namespace OxyPlot.Series
                 clippingRect,
                 pt,
                 s,
+
                 this.ActualTextColor,
                 this.ActualFont,
                 this.ActualFontSize,
                 this.ActualFontWeight,
-                0,
+                    0,
                 ha,
                 VerticalAlignment.Middle);
+        }
+
+        /// <summary>
+        /// Updates the <see cref="F:itemsSourceItems" /> from the <see cref="P:ItemsSource" /> and data fields.
+        /// </summary>
+        protected override void UpdateFromDataFields()
+        {
+            // Using reflection to add items by value and color (optional)
+            var filler = new ListBuilder<BarItem>();
+            filler.Add(this.ValueField, double.NaN);
+            filler.Add(this.ColorField, OxyColors.Automatic);
+            filler.Fill(this.ItemsSourceItems, this.ItemsSource, args => new BarItem(Convert.ToDouble(args[0])) { Color = (OxyColor)args[1] });
         }
     }
 }

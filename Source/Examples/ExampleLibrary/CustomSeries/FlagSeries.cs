@@ -185,7 +185,9 @@ namespace ExampleLibrary
         /// </summary>
         protected override void EnsureAxes()
         {
-            this.XAxis = this.PlotModel.GetAxisOrDefault(this.XAxisKey, this.PlotModel.DefaultXAxis);
+            this.XAxis = this.XAxisKey != null ?
+                         this.PlotModel.GetAxis(this.XAxisKey) :
+                         this.PlotModel.DefaultXAxis;
         }
 
         /// <summary>
@@ -201,8 +203,7 @@ namespace ExampleLibrary
         /// <summary>
         /// Sets default values (colors, line style etc) from the plot model.
         /// </summary>
-        /// <param name="model">A plot model.</param>
-        protected override void SetDefaultValues(PlotModel model)
+        protected override void SetDefaultValues()
         {
         }
 
